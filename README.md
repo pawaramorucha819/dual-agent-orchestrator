@@ -15,6 +15,22 @@ Claude Code と OpenAI Codex を組み合わせ、**作業エージェント（W
        └──── 承認されるまで繰り返し ────┘
 ```
 
+## クイックスタート
+
+```bash
+# 1. リポジトリをクローン
+git clone https://github.com/pawaramorucha819/dual-agent-orchestrator.git
+cd dual-agent-orchestrator
+
+# 2. 実行権限を付与
+chmod +x .ai/run_dual_agents.sh
+
+# 3. 実行（初回は対話形式で役割・モデルを設定）
+.ai/run_dual_agents.sh "TODOアプリにバリデーションを追加する"
+```
+
+初回実行時に Worker / Reviewer の役割分担とモデルを選択するプロンプトが表示されます。設定は `.ai/agent.config` に保存され、次回以降は自動で再利用されます。
+
 ## 必要なもの
 
 - **Bash** (4.0+)
