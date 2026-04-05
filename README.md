@@ -39,6 +39,7 @@ chmod +x .ai/run_dual_agents.sh
 - **[OpenAI Codex CLI](https://github.com/openai/codex)** (`codex`)
 - **uuidgen**
 - 各 CLI にログイン済みであること
+- **git リポジトリ**内で実行すること（スクリプトは `git rev-parse --show-toplevel` でルートを検出します）
 
 ## 使い方
 
@@ -57,17 +58,23 @@ chmod +x .ai/run_dual_agents.sh
 | 設定項目 | 内容 |
 |---------|------|
 | 役割分担 | Claude Code を Worker にするか、Codex を Worker にするか |
-| Claude モデル | `sonnet`, `opus`, または任意のモデル名 |
-| Codex モデル | `gpt-5.4` または任意のモデル名 |
+| Claude モデル | `sonnet`, `opus`, `opus[1m]` など任意のモデル名 |
+| Codex モデル | `gpt-5.4`, `gpt-5.3-codex` など任意のモデル名 |
 
 ## ディレクトリ構成
 
 ```
 .ai/
-├── run_dual_agents.sh      # メインのオーケストレーションスクリプト
-├── review.schema.json      # レビュー結果の JSON Schema
-├── agent.config            # 保存された設定（自動生成）
-└── logs/                   # セッションごとのログ（自動生成）
+├── run_dual_agents.sh        # メインのオーケストレーションスクリプト
+├── review.schema.json        # レビュー結果の JSON Schema
+├── agent.config              # 保存された設定（自動生成）
+├── worker.prompt.txt         # 最新の Worker プロンプト（自動生成）
+├── reviewer.prompt.txt       # 最新の Reviewer プロンプト（自動生成）
+├── review.context.txt        # Reviewer に渡すリポジトリ状態（自動生成）
+├── review.result.json        # 最新のレビュー結果 JSON（自動生成）
+├── review.feedback.txt       # Worker に渡すフィードバック（自動生成）
+├── worker.round*.txt         # 各ラウンドの Worker 出力（自動生成）
+└── logs/                     # セッションごとの詳細ログ（自動生成）
     └── YYYYMMDD_HHMMSS/
         ├── session.log
         ├── worker.round*.prompt.txt
@@ -75,6 +82,19 @@ chmod +x .ai/run_dual_agents.sh
         ├── reviewer.round*.prompt.txt
         ├── reviewer.round*.stream.jsonl
         └── reviewer.round*.json
+```
+
+### .gitignore の推奨
+
+自動生成���ァイルをリポジトリに含めないよう、以下を `.gitignore` に追加することを推奨します。
+
+```gitignore
+# Dual Agent Orchestrator の自動生成ファイル
+.ai/agent.config
+.ai/logs/
+.ai/*.txt
+.ai/*.json
+!.ai/review.schema.json
 ```
 
 ## レビュー結果のスキーマ
