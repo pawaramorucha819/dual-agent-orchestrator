@@ -86,7 +86,7 @@ chmod +x .ai/run_dual_agents.sh
 
 ### .gitignore の推奨
 
-自動生成���ァイルをリポジトリに含めないよう、以下を `.gitignore` に追加することを推奨します。
+自動生成ファイルをリポジトリに含めないよう、以下を `.gitignore` に追加することを推奨します。
 
 ```gitignore
 # Dual Agent Orchestrator の自動生成ファイル
