@@ -414,6 +414,7 @@ run_worker_round_codex() {
     --json \
     --output-last-message "$AI_DIR/worker.round${round}.txt" \
     "$(cat "$prompt_file")" \
+    < /dev/null \
     2> "$LOG_DIR/worker.round${round}.stderr" \
     | tee "$raw_log" \
     | parse_codex_stream "worker/codex"
@@ -431,6 +432,7 @@ run_reviewer_round_codex() {
     --output-schema "$REVIEW_SCHEMA" \
     --output-last-message "$REVIEW_JSON" \
     "$(cat "$prompt_file")" \
+    < /dev/null \
     2> "$LOG_DIR/reviewer.round${round}.stderr" \
     | tee "$raw_log" \
     | parse_codex_stream "reviewer/codex"
@@ -447,7 +449,7 @@ run_reviewer_round_claude() {
   claude -p \
     --model "$CLAUDE_MODEL" \
     --allowedTools "Read,Grep,Glob,Bash" \
-    --output-format stream-json \
+    --verbose --output-format stream-json \
     --json-schema "$schema_content" \
     --max-turns 6 \
     --dangerously-skip-permissions \
@@ -455,9 +457,17 @@ run_reviewer_round_claude() {
     | tee "$raw_log" \
     | parse_claude_stream "reviewer/claude"
 
-  # stream-json の最終 result からJSONを抽出
-  jq -r 'select(.type=="result") | .result // empty' "$raw_log" \
+  # stream-json の最終 result から構造化出力を抽出
+  # --json-schema 使用時は structured_output に格納される
+  jq -r 'select(.type=="result") | .structured_output // .result // empty' "$raw_log" \
     > "$REVIEW_JSON" 2>/dev/null || true
+
+  # structured_output はオブジェクトなので文字列化が必要な場合がある
+  if jq -e 'type == "object"' "$REVIEW_JSON" >/dev/null 2>&1; then
+    : # 既にJSON object — そのまま使用
+  elif jq -e '. | fromjson' "$REVIEW_JSON" >/dev/null 2>&1; then
+    jq -r '. | fromjson' "$REVIEW_JSON" > "$REVIEW_JSON.tmp" && mv "$REVIEW_JSON.tmp" "$REVIEW_JSON"
+  fi
 
   cp "$REVIEW_JSON" "$LOG_DIR/reviewer.round${round}.json"
 }
