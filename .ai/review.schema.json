@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "approved": { "type": "boolean" },
+    "summary": { "type": "string" },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "title": { "type": "string" },
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "details": { "type": "string" },
+          "suggested_fix": { "type": "string" }
+        },
+        "required": ["severity", "title", "file", "line", "details", "suggested_fix"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["approved", "summary", "issues"],
+  "additionalProperties": false
+}
