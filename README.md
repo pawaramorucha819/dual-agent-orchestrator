@@ -2,6 +2,25 @@
 
 Claude Code と OpenAI Codex を組み合わせ、**作業エージェント（Worker）** と **レビューエージェント（Reviewer）** の2役に分けてタスクを遂行するシェルベースのオーケストレーションツールです。
 
+## 安全性に関する注意
+
+このツールはヘッドレスモード（非対話型）でAIエージェントを実行するため、**対話的な権限承認ができません**。以下の権限モデルで動作します。
+
+| エージェント | 役割 | 権限モード | リスク |
+|---|---|---|---|
+| Claude Code Worker | 実装 | `--allowedTools` で明示的にツールを制限（Read, Write, Edit, Bash, Glob, Grep, Agent） | Bash は全コマンド許可。プロンプトで `git push` 等を禁止しているが、強制力はない |
+| Claude Code Reviewer | レビュー | `--allowedTools "Read,Grep,Glob,Bash"` | 読み取り中心。Write/Edit 不可 |
+| Codex Worker | 実装 | `--full-auto` | **全操作を自動承認。最もリスクが高い。** Codex CLI には `--allowedTools` 相当の機能がないため、プロンプトによる制約のみ |
+| Codex Reviewer | レビュー | `-s read-only`（サンドボックス） | 安全。読み取りのみ |
+
+**推奨事項:**
+- VM やコンテナなど、隔離された環境で実行してください
+- 重要なリポジトリで直接実行しないでください（コピーやブランチで作業すること）
+- 実行前に `git stash` や `git commit` で作業中の変更を退避してください
+- Codex Worker の `--full-auto` は特に注意が必要です。意図しないファイル削除やシステム変更が起こり得ます
+
+**自己責任でご使用ください。**
+
 ## 概要
 
 1つのタスクに対して、Worker がコード変更を行い、Reviewer が構造化された JSON 形式でレビューを返す——このサイクルを最大3ラウンド繰り返し、Reviewer が承認するまで自動的に改善を続けます。
