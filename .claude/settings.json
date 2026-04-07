@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command_input=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.command // empty') && for pattern in 'rm -rf /' 'rm -rf ~' 'rm -rf \\.' 'mkfs\\.' ':(){' 'chmod -R 777' 'chmod 777 /' '> /dev/sd' 'dd if=' 'git push' 'git push --force' 'git reset --hard' 'git clean -fd' 'git clean -fx' 'git checkout -- \\.' 'git restore \\.' '\\| sh$' '\\| bash$' 'curl.*\\| sh' 'wget.*\\| sh' 'curl.*\\| bash' 'wget.*\\| bash' 'npm publish' 'npx.*-y' 'pip install.*--break-system' 'sudo ' 'shutdown' 'reboot' 'init 0' 'init 6'; do if echo \"$command_input\" | grep -qE \"$pattern\"; then echo \"BLOCKED: Command matches dangerous pattern: $pattern\" >&2; exit 2; fi; done"
+          }
+        ]
+      }
+    ]
+  }
+}
