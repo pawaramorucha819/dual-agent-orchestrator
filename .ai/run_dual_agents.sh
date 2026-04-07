@@ -289,6 +289,7 @@ Rules:
 - Run relevant tests, lint, and typecheck if available.
 - Keep changes minimal and safe.
 - Do not push remotely.
+- Do not use web search or web fetch tools. Work only with local files.
 - Stop only when the repository is in a reviewable state.
 - At the end, provide a concise summary of what changed and what checks you ran.
 EOF
@@ -307,6 +308,7 @@ Rules:
 - Re-run relevant tests, lint, and typecheck if available.
 - Keep changes minimal and safe.
 - Do not push remotely.
+- Do not use web search or web fetch tools. Work only with local files.
 - Stop only when the repository is ready for re-review.
 - At the end, provide a concise summary of what changed and what checks you ran.
 EOF
@@ -375,14 +377,17 @@ run_worker_round_claude() {
   local prompt_file="$2"
   local raw_log="$LOG_DIR/worker.round${round}.stream.jsonl"
 
+  # ワーカーに許可するツールを明示的に制限（--dangerously-skip-permissions の代替）
+  local worker_tools="Read,Write,Edit,Bash,Glob,Grep,Agent"
+
   if [[ "$round" == "1" ]]; then
     CLAUDE_WORKER_SESSION_ID="$(uuidgen)"
     claude -p \
       --session-id "$CLAUDE_WORKER_SESSION_ID" \
       --model "$CLAUDE_MODEL" \
+      --allowedTools "$worker_tools" \
       --verbose --output-format stream-json \
       --max-turns 20 \
-      --dangerously-skip-permissions \
       "$(cat "$prompt_file")" \
       | tee "$raw_log" \
       | parse_claude_stream "worker/claude"
@@ -390,9 +395,9 @@ run_worker_round_claude() {
     claude -p \
       --resume "$CLAUDE_WORKER_SESSION_ID" \
       --model "$CLAUDE_MODEL" \
+      --allowedTools "$worker_tools" \
       --verbose --output-format stream-json \
       --max-turns 20 \
-      --dangerously-skip-permissions \
       "$(cat "$prompt_file")" \
       | tee "$raw_log" \
       | parse_claude_stream "worker/claude"
@@ -452,7 +457,6 @@ run_reviewer_round_claude() {
     --verbose --output-format stream-json \
     --json-schema "$schema_content" \
     --max-turns 6 \
-    --dangerously-skip-permissions \
     "$(cat "$prompt_file")" \
     | tee "$raw_log" \
     | parse_claude_stream "reviewer/claude"
