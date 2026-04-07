@@ -387,25 +387,32 @@ run_worker_round_claude() {
       --model "$CLAUDE_MODEL" \
       --allowedTools "$worker_tools" \
       --verbose --output-format stream-json \
-      --max-turns 20 \
+      --max-turns 50 \
       "$(cat "$prompt_file")" \
       | tee "$raw_log" \
-      | parse_claude_stream "worker/claude"
+      | parse_claude_stream "worker/claude" \
+      || true
   else
     claude -p \
       --resume "$CLAUDE_WORKER_SESSION_ID" \
       --model "$CLAUDE_MODEL" \
       --allowedTools "$worker_tools" \
       --verbose --output-format stream-json \
-      --max-turns 20 \
+      --max-turns 50 \
       "$(cat "$prompt_file")" \
       | tee "$raw_log" \
-      | parse_claude_stream "worker/claude"
+      | parse_claude_stream "worker/claude" \
+      || true
   fi
 
   # stream-json の最終 result からテキストを抽出して保存
+  # max_turns到達時はresultがnullになるため、最後のassistantメッセージからも抽出を試みる
   jq -r 'select(.type=="result") | .result // empty' "$raw_log" \
     > "$AI_DIR/worker.round${round}.txt" 2>/dev/null || true
+  if [[ ! -s "$AI_DIR/worker.round${round}.txt" ]]; then
+    jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="text") | .text // empty' "$raw_log" \
+      | tail -20 > "$AI_DIR/worker.round${round}.txt" 2>/dev/null || true
+  fi
 }
 
 run_worker_round_codex() {
